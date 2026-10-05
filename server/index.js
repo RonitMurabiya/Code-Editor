@@ -15,7 +15,9 @@ const userDir = path.resolve(process.cwd(), "user");
 
 function getSafeUserPath(requestedPath) {
   if (!requestedPath) return null;
-  const normalized = requestedPath.startsWith("/") ? requestedPath : "/" + requestedPath;
+  const normalized = requestedPath.startsWith("/")
+    ? requestedPath
+    : "/" + requestedPath;
   const safePath = path.resolve(userDir, "." + normalized);
   if (!safePath.startsWith(userDir)) {
     return null;
@@ -34,13 +36,17 @@ try {
   });
 } catch (e) {
   console.warn("WSL spawn failed, falling back to powershell.exe:", e.message);
-  ptyProcess = pty.spawn(process.platform === "win32" ? "powershell.exe" : "bash", [], {
-    name: "xterm-color",
-    cols: 80,
-    rows: 24,
-    cwd: userDir,
-    env: process.env,
-  });
+  ptyProcess = pty.spawn(
+    process.platform === "win32" ? "powershell.exe" : "bash",
+    [],
+    {
+      name: "xterm-color",
+      cols: 80,
+      rows: 24,
+      cwd: userDir,
+      env: process.env,
+    },
+  );
 }
 
 const server = http.createServer(app);
@@ -51,12 +57,14 @@ const io = new SocketServer({
 io.attach(server);
 
 let refreshDebounce;
-chokidar.watch(userDir, { ignoreInitial: true }).on("all", (event, filePath) => {
-  clearTimeout(refreshDebounce);
-  refreshDebounce = setTimeout(() => {
-    io.emit("file:refresh", filePath);
-  }, 100);
-});
+chokidar
+  .watch(userDir, { ignoreInitial: true })
+  .on("all", (event, filePath) => {
+    clearTimeout(refreshDebounce);
+    refreshDebounce = setTimeout(() => {
+      io.emit("file:refresh", filePath);
+    }, 100);
+  });
 
 ptyProcess.onData((data) => {
   io.emit("terminal:data", data);
@@ -65,7 +73,6 @@ ptyProcess.onData((data) => {
 io.on("connection", (socket) => {
   console.log(`Socket connected:`, socket.id);
 
-  
   socket.emit("file:refresh");
 
   socket.on("file:change", async ({ path: filePath, content }) => {
@@ -163,7 +170,9 @@ app.delete("/files", async (req, res) => {
   }
 });
 
-server.listen(9000, () => console.log(`Docker server running on port 9000`));
+server.listen(9000, "0.0.0.0", () =>
+  console.log(`Docker server running on port 9000`),
+);
 
 async function generateFileTree(directory) {
   const tree = {};
