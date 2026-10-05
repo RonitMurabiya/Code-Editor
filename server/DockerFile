@@ -1,0 +1,21 @@
+FROM node:20-bookworm
+
+# Install dependencies required to build node-pty
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 9000
+
+CMD ["npm", "start"]
